@@ -4,23 +4,17 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   Post,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UsersService } from './user.service';
-import { ConfigService } from '@nestjs/config';
 
 @Controller({ path: 'user' })
 export class UserController {
-  private readonly logger = new Logger();
-
-  constructor(
-    private readonly userService: UsersService,
-    private readonly configService: ConfigService,
-  ) {
-    this.logger.log(this.configService.get('DATABASE_USER'));
-  }
+  constructor(private readonly userService: UsersService) {}
 
   @Get('get/:id')
   @HttpCode(HttpStatus.OK)
@@ -29,8 +23,8 @@ export class UserController {
   }
 
   @Post('create')
-  @HttpCode(HttpStatus.OK)
-  create(@Body() body: any): any {
+  @UsePipes(new ValidationPipe())
+  create(@Body() body: CreateUserDto): any {
     return this.userService.create(body);
   }
 }

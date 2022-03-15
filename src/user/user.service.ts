@@ -1,29 +1,30 @@
+import * as bcrypt from 'bcrypt';
+import { Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
-import { User } from './entities/user.entity';
+import { UserOrm } from 'src/database/typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserEntity } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class UsersService {
-  private userdb: User[] = [
-    { id: 1, email: 'john@gmail.com', name: 'John' },
-    { id: 2, email: 'ann@gmail.com', name: 'Ann' },
-  ];
+  constructor(
+    @InjectRepository(UserOrm)
+    private readonly userRepository: Repository<UserEntity>,
+  ) {}
 
-  create(user: CreateUserDto): User {
-    const newUser = { id: 5, ...user };
-    this.userdb.push(newUser);
-    return newUser;
+  findById(id: number): Promise<UserEntity> {
+    return this.userRepository.findOne({ id });
   }
 
-  findById(id: number): User {
-    return this.userdb.find((usr) => {
-      if (usr.id === id) return usr;
-    });
-  }
+  async create(user: CreateUserDto): Promise<void> {
+    const newUser = this.userRepository.create(user);
+    const passwordHash = await bcrypt.hash(user.password, 10);
 
-  findByEmail(email: string): User {
-    return this.userdb.find((usr) => {
-      if (usr.email === email) return usr;
+    this.userRepository.save({
+      name: newUser.email,
+      email: newUser.email,
+      password: passwordHash,
     });
   }
 }
