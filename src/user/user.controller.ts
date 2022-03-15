@@ -4,14 +4,23 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Logger,
   Param,
   Post,
 } from '@nestjs/common';
 import { UsersService } from './user.service';
+import { ConfigService } from '@nestjs/config';
 
 @Controller({ path: 'user' })
 export class UserController {
-  constructor(private readonly userService: UsersService) {}
+  private readonly logger = new Logger();
+
+  constructor(
+    private readonly userService: UsersService,
+    private readonly configService: ConfigService,
+  ) {
+    this.logger.log(this.configService.get('DATABASE_USER'));
+  }
 
   @Get('get/:id')
   @HttpCode(HttpStatus.OK)
