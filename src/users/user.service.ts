@@ -13,10 +13,6 @@ export class UsersService {
     private readonly userRepository: Repository<UserEntity>,
   ) {}
 
-  findById(id: number): Promise<UserEntity> {
-    return this.userRepository.findOne({ id });
-  }
-
   async create(user: CreateUserDto): Promise<void> {
     const newUser = this.userRepository.create(user);
     const passwordHash = await bcrypt.hash(user.password, 10);
@@ -26,5 +22,21 @@ export class UsersService {
       email: newUser.email,
       password: passwordHash,
     });
+  }
+
+  findById(id: number): Promise<UserEntity> {
+    return this.userRepository
+      .createQueryBuilder('u')
+      .where('u.id = :id', { id })
+      .select(['u.id', 'u.email', 'u.name'])
+      .getOne();
+  }
+
+  findWithCredentials(email: string, password: string): Promise<UserEntity> {
+    return this.userRepository
+      .createQueryBuilder('u')
+      .where('u.email = :email and u.password = :password', { email, password })
+      .select(['u.id', 'u.email', 'u.name'])
+      .getOne();
   }
 }
